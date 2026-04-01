@@ -1,0 +1,36 @@
+---
+import DocsLayout from "../layouts/DocsLayout.astro";
+import { buildSidebar, getDocDescription, getDocHref, getDocSlug, getSortedDocs, getDocTitle } from "../lib/docs";
+
+const docs = await getSortedDocs();
+const sidebar = buildSidebar(docs);
+---
+
+<DocsLayout
+  title="Personal Docs"
+  description="A lightweight Astro starter for private notes and personal documentation."
+  sidebar={sidebar}
+>
+  <section class="hero">
+    <p class="eyebrow">Personal knowledge base</p>
+    <h1>Write fast, keep it simple, and let Astro handle the structure.</h1>
+    <p class="lead">
+      Your notes live in <code>personal-docs/</code>. Markdown and MDX files are loaded automatically
+      and rendered with a clean plain-CSS layout.
+    </p>
+
+    <div class="hero-actions">
+      <a class="button" href={docs[0] ? getDocHref(docs[0]) : "#docs"}>Open the docs</a>
+    </div>
+  </section>
+
+  <section class="cards" id="docs">
+    {docs.map((entry) => (
+      <a class="card" href={getDocHref(entry)}>
+        <p class="card-kicker">{getDocSlug(entry).split("/").slice(0, -1).join(" / ") || "General"}</p>
+        <h2>{getDocTitle(entry)}</h2>
+        <p>{getDocDescription(entry)}</p>
+      </a>
+    ))}
+  </section>
+</DocsLayout>

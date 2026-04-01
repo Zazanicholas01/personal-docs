@@ -1,0 +1,53 @@
+---
+import { getCollection, getEntry, render } from "astro:content";
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import { buildSidebar, getDocDescription, getDocSlug, getDocTitle, getSortedDocs } from "../../lib/docs";
+
+export async function getStaticPaths() {
+  const docs = await getCollection("docs", ({ data }) => !data.draft);
+
+  return docs.map((entry) => ({
+    params: { slug: getDocSlug(entry) }
+  }));
+}
+
+const docs = await getSortedDocs();
+const currentSlug = Array.isArray(Astro.params.slug) ? Astro.params.slug.join("/") : Astro.params.slug;
+const entry = await getEntry("docs", currentSlug);
+
+if (!entry) {
+  throw new Error(`Document not found for slug: ${currentSlug}`);
+}
+
+const { Content, headings } = await render(entry);
+const sidebar = buildSidebar(docs, currentSlug);
+const title = getDocTitle(entry);
+const description = getDocDescription(entry);
+---
+
+<DocsLayout title={`${title} | Personal Docs`} description={description} sidebar={sidebar}>
+  <article class="doc-article">
+    <header class="doc-header">
+      <p class="eyebrow">{currentSlug.split("/").slice(0, -1).join(" / ") || "Documentation"}</p>
+      <h1>{title}</h1>
+      <p class="lead">{description}</p>
+    </header>
+
+    {headings.length > 0 && (
+      <div class="toc">
+        <strong>On this page</strong>
+        <ul>
+          {headings.map((heading) => (
+            <li>
+              <a href={`#${heading.slug}`}>{heading.text}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+</DocsLayout>

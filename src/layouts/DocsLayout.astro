@@ -1,0 +1,129 @@
+---
+import type { SidebarMacro } from "../lib/docs";
+import "../styles/site.css";
+
+type Props = {
+  title: string;
+  description?: string;
+  sidebar: SidebarMacro[];
+};
+
+const { title, description, sidebar } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description ?? "Personal documentation built with Astro."} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <div class="page-shell">
+      <aside class="sidebar">
+        <a class="brand" href="/">
+          <span class="brand-mark">ND</span>
+          <span>
+            <strong>Personal Docs</strong>
+            <small>Astro + plain CSS</small>
+          </span>
+        </a>
+
+        <nav aria-label="Documentation">
+          <div class="sidebar-groups">
+            {sidebar.map((macro) => (
+              <section class="macro-group" data-macro={macro.slug}>
+                <button
+                  class:list={["macro-toggle", macro.current && "is-current"]}
+                  type="button"
+                  aria-expanded={macro.open ? "true" : "false"}
+                >
+                  <span>{macro.label}</span>
+                  <span class="macro-chevron" aria-hidden="true">?</span>
+                </button>
+
+                <div class:list={["macro-panel", macro.open && "is-open"]}>
+                  <a class:list={["macro-overview-link", macro.current && "is-current"]} href={macro.href}>
+                    Open {macro.label}
+                  </a>
+
+                  <ul class="topic-list">
+                    {macro.topics.map((topic) => (
+                      <li class="topic-item">
+                        <a class:list={["topic-link", topic.current && "is-current"]} href={topic.href}>
+                          {topic.label}
+                        </a>
+
+                        {topic.pages.length > 0 && (
+                          <ul class:list={["page-list", topic.open && "is-open"]}>
+                            {topic.pages.map((page) => (
+                              <li>
+                                <a class:list={["page-link", page.current && "is-current"]} href={page.href}>
+                                  {page.label}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </section>
+            ))}
+          </div>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <slot />
+      </main>
+    </div>
+
+    <script>
+      const storageKey = 'personal-docs:macro-state';
+      const groups = Array.from(document.querySelectorAll('.macro-group'));
+
+      const readState = () => {
+        try {
+          return JSON.parse(window.localStorage.getItem(storageKey) ?? '{}');
+        } catch {
+          return {};
+        }
+      };
+
+      const writeState = (state) => {
+        window.localStorage.setItem(storageKey, JSON.stringify(state));
+      };
+
+      const applyGroupState = (button, panel, expanded) => {
+        button.setAttribute('aria-expanded', String(expanded));
+        panel.classList.toggle('is-open', expanded);
+      };
+
+      const savedState = readState();
+
+      for (const group of groups) {
+        const slug = group.getAttribute('data-macro');
+        const button = group.querySelector('.macro-toggle');
+        const panel = group.querySelector('.macro-panel');
+        if (!slug || !(button instanceof HTMLButtonElement) || !(panel instanceof HTMLElement)) continue;
+
+        if (Object.prototype.hasOwnProperty.call(savedState, slug)) {
+          applyGroupState(button, panel, Boolean(savedState[slug]));
+        }
+
+        button.addEventListener('click', () => {
+          const isExpanded = button.getAttribute('aria-expanded') === 'true';
+          const nextExpanded = !isExpanded;
+          applyGroupState(button, panel, nextExpanded);
+
+          const nextState = readState();
+          nextState[slug] = nextExpanded;
+          writeState(nextState);
+        });
+      }
+    </script>
+  </body>
+</html>
