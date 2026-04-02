@@ -8,8 +8,16 @@ order: 170
 
 ## Possible subtopics
 
-- SLIs and SLOs
-- error budgets
-- on-call practices
-- incidents and postmortems
-- capacity planning
+- 
+
+## Latency
+
+- CPU Registers Latency (1ns)
+- L1 / L2 Cache Access (1-10ns)
+- L3 Cache Access (10-100ns)
+- System call cost (100-1000ns)
+- HTTP request process cost / Sequential read (10-100 micros)
+- SSD write latency / Intrazone networking round trip / Memcache Redis read operation (100-1000 micros)
+- Intrazone cloud networking round trip / Seek time hard disk (1-10ms)
+- Network trip of intracontinental / Read 1 GB Sequentially (10-100ms)
+- Bcrpyt Password / TLS Handshake (100-1000ms)
